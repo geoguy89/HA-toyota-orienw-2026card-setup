@@ -16,6 +16,14 @@ A dashboard card plus a Home Assistant package for Toyota (and Lexus) vehicles i
 
 Everything is plain Home Assistant YAML. The only third-party frontend dependency is `button-card`.
 
+## Screenshots
+
+| Status, fuel, service, trips and tires | Controls, climate and schedule |
+|---|---|
+| ![Car photo, lock and door status, remote-start countdown, fuel gauge, next service, lease miles, trip stats and a tire-pressure diagram](docs/images/card-status.png) | ![Lock, unlock, start, stop, hazards, find and refresh buttons; cabin temperature, defrost, heated wheel and seats; recurring and one-time remote-start schedule with a weather gate](docs/images/card-controls.png) |
+
+Shown on a 2026 RAV4 while remote-started: the countdown shows the time left, and the climate tiles show the settings it started with.
+
 ---
 
 ## 1. Prerequisites
