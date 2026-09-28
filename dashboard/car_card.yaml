@@ -1,0 +1,1305 @@
+# Toyota Remote Kit — dashboard card
+# Add it with: Dashboard > Edit > + Add card > Manual, then paste this whole file.
+# Before pasting, find & replace:
+#   YOUR_CAR            -> your vehicle's entity slug (see README, "Find your entity slug")
+#   YOUR_CAR_IMAGE_URL  -> a picture of your car (see README)
+#   YOUR CAR NAME       -> the title shown above the picture
+# Recommended tire pressure: search this file for "const REC = 36" and change it to the
+# number on your driver's door-jamb sticker.
+# Requires the "button-card" frontend card from HACS.
+type: vertical-stack
+cards:
+- type: custom:button-card
+  show_icon: false
+  show_name: false
+  show_state: false
+  show_label: true
+  tap_action:
+    action: none
+  label: '[[[ return `<div style="text-align:center;font-size:14px;font-weight:700;color:rgba(255,255,255,0.85);letter-spacing:0.5px;margin-bottom:10px">YOUR CAR NAME</div><img src="YOUR_CAR_IMAGE_URL" style="width:100%;max-height:220px;object-fit:contain;display:block;margin:0 auto;pointer-events:none;-webkit-touch-callout:none;user-select:none">`; ]]]'
+  styles:
+    card:
+    - background: rgba(255,255,255,0.04)
+    - border-radius: 16px
+    - padding: 12px 8px 8px
+    - margin: 2px 0
+    - box-shadow: none
+    - background: rgba(255,255,255,0.03)
+    label:
+    - width: 100%
+    - margin: '0'
+    - padding: '0'
+    - white-space: normal
+  hold_action:
+    action: call-service
+    service: input_boolean.toggle
+    service_data:
+      entity_id: input_boolean.toyota_show_settings
+    haptic: medium
+- type: custom:button-card
+  show_icon: false
+  show_name: false
+  show_state: false
+  show_label: true
+  tap_action:
+    action: none
+  label: '[[[ const lock = states[''lock.YOUR_CAR'']?.state;
+
+    const open = [[''binary_sensor.YOUR_CAR_front_driver_door'',''Front driver door''],[''binary_sensor.YOUR_CAR_front_passenger_door'',''Front passenger door''],[''binary_sensor.YOUR_CAR_rear_driver_door'',''Rear driver door''],[''binary_sensor.YOUR_CAR_rear_passenger_door'',''Rear passenger door''],[''binary_sensor.YOUR_CAR_trunk'',''Hatch''],[''binary_sensor.YOUR_CAR_hood'',''Hood''],[''binary_sensor.YOUR_CAR_front_driver_window'',''Front driver window''],[''binary_sensor.YOUR_CAR_front_passenger_window'',''Front passenger window''],[''binary_sensor.YOUR_CAR_rear_driver_window'',''Rear driver window''],[''binary_sensor.YOUR_CAR_rear_passenger_window'',''Rear passenger window'']].filter(([e]) => states[e]?.state === ''on'').map(([,n]) => n);
+
+    const known = [[''binary_sensor.YOUR_CAR_front_driver_door'',''Front driver door''],[''binary_sensor.YOUR_CAR_front_passenger_door'',''Front passenger door''],[''binary_sensor.YOUR_CAR_rear_driver_door'',''Rear driver door''],[''binary_sensor.YOUR_CAR_rear_passenger_door'',''Rear passenger door''],[''binary_sensor.YOUR_CAR_trunk'',''Hatch''],[''binary_sensor.YOUR_CAR_hood'',''Hood''],[''binary_sensor.YOUR_CAR_front_driver_window'',''Front driver window''],[''binary_sensor.YOUR_CAR_front_passenger_window'',''Front passenger window''],[''binary_sensor.YOUR_CAR_rear_driver_window'',''Rear driver window''],[''binary_sensor.YOUR_CAR_rear_passenger_window'',''Rear passenger window'']].some(([e]) => [''on'',''off''].includes(states[e]?.state));
+
+    const chip = (txt, c) => `<span style="display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;background:${c}1f;border:1px solid ${c}55;color:${c};font-size:11px;font-weight:600">${txt}</span>`;
+
+    const lk = lock===''locked'' ? chip(''🔒 Locked'',''#00e87a'') : lock===''unlocked'' ? chip(''🔓 Unlocked'',''#ffc107'') : chip(''Lock unknown'',''#9e9e9e'');
+
+    const op = !known ? chip(''Doors · no data yet'',''#9e9e9e'') : open.length ? chip(''⚠ Open: '' + open.join('', ''),''#ff4444'') : chip(''✓ All closed'',''#00e87a'');
+
+    return `<div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;padding:10px 8px">${lk}${op}</div>`; ]]]'
+  styles:
+    card:
+    - background: rgba(255,255,255,0.04)
+    - border-radius: 16px
+    - padding: '0'
+    - margin: 2px 0
+    - box-shadow: none
+    label:
+    - width: 100%
+    - margin: '0'
+    - padding: '0'
+    - white-space: normal
+- type: custom:button-card
+  show_icon: false
+  show_name: false
+  show_state: false
+  show_label: true
+  tap_action:
+    action: none
+  label: '[[[ const e=states[''binary_sensor.YOUR_CAR_remote_start'']; if(!e||e.state!==''on'') return '''';
+
+    const t=states[''timer.toyota_engine'']; let cd='''';
+
+    if(t&&t.state===''active''&&t.attributes.finishes_at){const rem=Math.max(0,(new Date(t.attributes.finishes_at).getTime()-Date.now())/1000);cd=Math.floor(rem/60)+'':''+String(Math.floor(rem%60)).padStart(2,''0'');}
+
+    return `<div style="display:flex;align-items:center;justify-content:center;gap:14px;padding:18px 16px"><div style="width:8px;height:8px;border-radius:50%;background:#00e5ff;box-shadow:0 0 8px #00e5ff,0 0 18px rgba(0,229,255,0.45)"></div><span style="font-size:11px;letter-spacing:4.5px;color:#00e5ff;font-weight:700">RUNNING</span>${cd?`<span style="font-size:28px;color:rgba(0,229,255,0.9);font-weight:200;letter-spacing:2px;font-variant-numeric:tabular-nums">${cd}</span>`:''''}</div>`; ]]]'
+  styles:
+    card:
+    - background: rgba(255,255,255,0.04)
+    - border-radius: 16px
+    - padding: '0'
+    - margin: 2px 0
+    - box-shadow: none
+    - display: '[[[ return states[''binary_sensor.YOUR_CAR_remote_start'']?.state===''on''?''block'':''none''; ]]]'
+    - background: linear-gradient(135deg,rgba(0,35,55,0.98),rgba(0,60,80,0.98))
+    - border: 1px solid rgba(0,229,255,0.22)
+    label:
+    - width: 100%
+    - margin: '0'
+    - padding: '0'
+    - white-space: normal
+  triggers_update:
+  - binary_sensor.YOUR_CAR_remote_start
+  - timer.toyota_engine
+- type: custom:button-card
+  show_icon: false
+  show_name: false
+  show_state: false
+  show_label: true
+  tap_action:
+    action: none
+  label: "[[[ const num = id => { const v=parseFloat(states[id]?.state); return isNaN(v)?null:v; };\nconst fuel=num('sensor.YOUR_CAR_fuel_level'), dte=num('sensor.YOUR_CAR_distance_to_empty'), odo=num('sensor.YOUR_CAR_odometer');\nconst oilLeft=num('sensor.toyota_next_oil_change'), oilUsed=num('sensor.toyota_oil_life_used');\nconst oilDue=states['sensor.toyota_next_oil_change']?.attributes?.due_date;\nconst toyotaSvc=num('sensor.YOUR_CAR_next_service');\nconst bar=(title,w,right,c,sub)=>`<div style=\"margin:0 16px 16px\"><div style=\"display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px\"><span style=\"font-size:10px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,0.4)\">${title}</span><span style=\"font-size:12px;font-weight:600;color:${c}\">${right}</span></div><div style=\"height:9px;background:rgba(255,255,255,0.07);border-radius:5px;overflow:hidden\"><div style=\"height:100%;width:${w}%;background:linear-gradient(90deg,${c}dd,${c});border-radius:5px;transition:width .6s ease\"></div></div>${sub?`<div style=\"font-size:9px;color:rgba(255,255,255,0.3);margin-top:4px\">${sub}</div>`:''}</div>`;\n// fuel: 4-segment gauge\nconst fp=fuel??0, fc=fp>50?'#ffffff':fp>25?'#ffc107':'#ff4444';\nconst segs=[0,1,2,3].map(i=>`<div style=\"flex:1;height:100%;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden\"><div style=\"height:100%;width:${Math.min(100,Math.max(0,(fp-i*25)/25*100))}%;background:${fc};border-radius:3px\"></div></div>`).join('');\nconst dteTxt = dte!=null ? Math.round(dte).toLocaleString()+' mi · '+Math.round(fp)+'%' : fuel!=null ? Math.round(fp)+'% fuel' : '—';\nconst fuelHtml=`<div style=\"margin:0 16px 16px\"><div style=\"display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px\"><span style=\"font-size:10px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,0.4)\">TILL EMPTY</span><span style=\"font-size:12px;font-weight:600;color:${fc}\">${dteTxt}</span></div><div style=\"display:flex;align-items:center;gap:6px\"><span style=\"font-size:11px;font-weight:700;color:rgba(255,255,255,0.5)\">E</span><div style=\"flex:1;display:flex;gap:3px;height:9px\">${segs}</div><span style=\"font-size:11px;font-weight:700;color:rgba(255,255,255,0.5)\">F</span></div></div>`;\n// oil change\nlet oilHtml;\nif(oilLeft!=null){\n  const w=oilUsed??0, c=w<75?'#00e87a':w<95?'#ffc107':'#ff4444';\n  const right = oilLeft>=0 ? Math.round(oilLeft).toLocaleString()+' mi left' : Math.abs(Math.round(oilLeft)).toLocaleString()+' mi OVERDUE';\n  const sub = (oilDue?'or by '+new Date(oilDue+'T00:00').toLocaleDateString()+' · ':'') + (toyotaSvc!=null?'Toyota maintenance in '+Math.round(toyotaSvc).toLocaleString()+' mi':'');\n  oilHtml=bar('NEXT OIL CHANGE',w,right,c,sub);\n} else {\n  oilHtml=bar('NEXT SERVICE (TOYOTA)',0,toyotaSvc!=null?Math.round(toyotaSvc).toLocaleString()+' mi':'—','#00e87a','Hold the car photo → log your last oil change to track it here');\n}\n// lease (hidden until a start odometer is set)\nconst start=num('input_number.toyota_lease_start_odometer')??0;\nlet leaseHtml='';\nif(start>0&&odo!=null){\n  const used=Math.max(0,Math.round(odo-start));\n  const yr=[num('input_number.toyota_lease_miles_yr1')??12000,num('input_number.toyota_lease_miles_yr2')??12000,num('input_number.toyota_lease_miles_yr3')??12000];\n  const total=yr[0]+yr[1]+yr[2];\n  const seg=(i)=>{const before=yr.slice(0,i).reduce((a,b)=>a+b,0);const mi=Math.min(Math.max(0,used-before),yr[i]);const w=yr[i]>0?Math.min(100,mi/yr[i]*100):0;const c=w<70?'#00b4ff':w<90?'#ffc107':'#ff4444';return `<div style=\"flex:1;display:flex;flex-direction:column;gap:3px\"><div style=\"font-size:9px;font-weight:700;letter-spacing:.8px;color:rgba(255,255,255,0.35);text-align:center\">YR ${i+1}</div><div style=\"height:7px;background:rgba(255,255,255,0.07);border-radius:4px;overflow:hidden\"><div style=\"height:100%;width:${w>0?Math.max(w,1.5):0}%;background:linear-gradient(90deg,${c}cc,${c});border-radius:4px\"></div></div><div style=\"font-size:9px;color:rgba(255,255,255,0.4);text-align:center;margin-top:2px\">${mi.toLocaleString()} mi</div></div>`;};\n  const ld=(()=>{const d=states['input_datetime.toyota_lease_start_date']?.state;return d&&!['unknown','unavailable'].includes(d)?new Date(d+'T00:00').toLocaleDateString():'';})();\n  leaseHtml=`<div style=\"margin:14px 16px 6px\"><div style=\"display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px\"><span style=\"font-size:10px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,0.4)\">LEASE MILES</span><span style=\"font-size:11px;color:rgba(255,255,255,0.75)\">${used.toLocaleString()} / ${total.toLocaleString()} mi</span></div><div style=\"display:flex;gap:8px\">${seg(0)}${seg(1)}${seg(2)}</div><div style=\"font-size:9px;color:rgba(255,255,255,0.28);text-align:center;margin-top:5px;letter-spacing:.5px\">${Math.max(0,total-used).toLocaleString()} mi remaining${ld?' · starts '+ld:''}</div></div>`;\n}\nreturn `<div style=\"padding:12px 0 4px\">${fuelHtml}${oilHtml}${leaseHtml}</div>`; ]]]"
+  styles:
+    card:
+    - background: rgba(255,255,255,0.04)
+    - border-radius: 16px
+    - padding: '0'
+    - margin: 2px 0
+    - box-shadow: none
+    label:
+    - width: 100%
+    - margin: '0'
+    - padding: '0'
+    - white-space: normal
+- type: custom:button-card
+  show_icon: false
+  show_name: false
+  show_state: false
+  show_label: true
+  tap_action:
+    action: none
+  label: '[[[ const v=(id,d=1)=>{const x=parseFloat(states[id]?.state);return isNaN(x)?''—'':x.toLocaleString(undefined,{maximumFractionDigits:d});};
+
+    const tile=(val,unit,lbl)=>`<div style="flex:1;min-width:0;text-align:center;padding:10px 2px"><div style="font-size:20px;font-weight:300;color:rgba(255,255,255,0.92);font-variant-numeric:tabular-nums">${val}<span style="font-size:10px;color:rgba(255,255,255,0.45);margin-left:2px">${unit}</span></div><div style="font-size:9px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,0.35);margin-top:2px">${lbl}</div></div>`;
+
+    const sep=''<div style="width:1px;background:rgba(255,255,255,0.07);margin:10px 0"></div>'';
+
+    return `<div style="display:flex;align-items:stretch">${tile(v(''sensor.YOUR_CAR_average_fuel_consumption''),''mpg'',''AVG MPG'')}${sep}${tile(v(''sensor.YOUR_CAR_trip_fuel_consumption''),''mpg'',''TRIP MPG'')}${sep}${tile(v(''sensor.YOUR_CAR_trip_details_a''),''mi'',''TRIP A'')}${sep}${tile(v(''sensor.YOUR_CAR_trip_count'',0),'''',''TRIPS'')}</div>`; ]]]'
+  styles:
+    card:
+    - background: rgba(255,255,255,0.04)
+    - border-radius: 16px
+    - padding: '0'
+    - margin: 2px 0
+    - box-shadow: none
+    label:
+    - width: 100%
+    - margin: '0'
+    - padding: '0'
+    - white-space: normal
+- type: custom:button-card
+  show_icon: false
+  show_name: false
+  show_state: false
+  show_label: true
+  tap_action:
+    action: none
+  label: "[[[ const REC = 36; // recommended cold PSI — see the sticker in your driver's door jamb\nconst t = {fl:'sensor.YOUR_CAR_front_driver_tire', fr:'sensor.YOUR_CAR_front_passenger_tire', rl:'sensor.YOUR_CAR_rear_driver_tire', rr:'sensor.YOUR_CAR_rear_passenger_tire'};\nconst names = {fl:'Front driver', fr:'Front passenger', rl:'Rear driver', rr:'Rear passenger'};\nconst w = {fl:'binary_sensor.YOUR_CAR_front_driver_tire_pressure_warning', fr:'binary_sensor.YOUR_CAR_front_passenger_tire_pressure_warning', rl:'binary_sensor.YOUR_CAR_rear_driver_tire_pressure_warning', rr:'binary_sensor.YOUR_CAR_rear_passenger_tire_pressure_warning'};\nconst warn = k => states[w[k]]?.state==='on';\nconst val = k => {const x=parseFloat(states[t[k]]?.state);return isNaN(x)?null:x;};\nconst col = k => {const x=val(k); if(x==null) return '#9e9e9e'; if(warn(k)||x<REC-4) return '#ff4444'; if(x<REC-1||x>REC+4) return '#ffc107'; return '#00e87a';};\nconst upd = states['sensor.YOUR_CAR_last_tire_pressure_update_timestamp']?.state;\nconst updTxt = upd && !['unknown','unavailable'].includes(upd) ? new Date(isNaN(upd)?upd:upd*1000).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : '';\n// tire geometry in a 300x230 viewBox (car top view, nose up)\nconst pos = {fl:[92,52], fr:[208,52], rl:[92,168], rr:[208,168]};\nconst lbl = {fl:[40,64,'end'], fr:[260,64,'start'], rl:[40,180,'end'], rr:[260,180,'start']};\nconst wheels = Object.keys(pos).map(k => {\n  const [x,y]=pos[k], [lx,ly,a]=lbl[k], c=col(k), v=val(k);\n  const tip = `${names[k]}: ${v==null?'no reading':v+' psi'}${warn(k)?' — LOW PRESSURE WARNING':''} (recommended ${REC} psi)`;\n  return `<g style=\"cursor:help\"><title>${tip}</title>\n    <rect x=\"${x-11}\" y=\"${y-22}\" width=\"22\" height=\"44\" rx=\"7\" fill=\"${c}33\" stroke=\"${c}\" stroke-width=\"2\"/>\n    <text x=\"${lx}\" y=\"${ly-8}\" text-anchor=\"${a}\" font-size=\"22\" font-weight=\"300\" fill=\"${c}\">${v==null?'—':Math.round(v)}</text>\n    <text x=\"${lx}\" y=\"${ly+8}\" text-anchor=\"${a}\" font-size=\"9\" font-weight=\"700\" letter-spacing=\"1\" fill=\"rgba(255,255,255,0.35)\">PSI</text></g>`;\n}).join('');\nconst body = `<path d=\"M110 22 Q150 6 190 22 L204 60 L204 184 Q204 212 176 214 L124 214 Q96 212 96 184 L96 60 Z\" fill=\"rgba(255,255,255,0.05)\" stroke=\"rgba(255,255,255,0.25)\" stroke-width=\"1.5\"/>\n  <path d=\"M112 70 Q150 58 188 70 L182 96 Q150 90 118 96 Z\" fill=\"rgba(144,202,249,0.18)\"/>\n  <path d=\"M118 170 Q150 176 182 170 L186 190 Q150 198 114 190 Z\" fill=\"rgba(144,202,249,0.14)\"/>\n  <rect x=\"120\" y=\"104\" width=\"60\" height=\"56\" rx=\"6\" fill=\"rgba(255,255,255,0.03)\"/>`;\nreturn `<div style=\"padding:10px 8px 6px\"><div style=\"display:flex;justify-content:space-between;margin:0 8px 4px\"><span style=\"font-size:10px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,0.4)\">TIRE PRESSURE</span><span style=\"font-size:9px;color:rgba(255,255,255,0.3)\">${updTxt?'updated '+updTxt:''}</span></div>\n<svg viewBox=\"0 0 300 230\" style=\"width:100%;max-width:360px;display:block;margin:0 auto\">${body}${wheels}</svg>\n<div style=\"text-align:center;font-size:9px;color:rgba(255,255,255,0.28);margin-top:2px\">recommended ${REC} psi · hover or long-press a tire for details</div></div>`; ]]]"
+  styles:
+    card:
+    - background: rgba(255,255,255,0.04)
+    - border-radius: 16px
+    - padding: '0'
+    - margin: 2px 0
+    - box-shadow: none
+    label:
+    - width: 100%
+    - margin: '0'
+    - padding: '0'
+    - white-space: normal
+- type: custom:button-card
+  name: CONTROLS
+  show_icon: false
+  tap_action:
+    action: none
+  styles:
+    card:
+    - background: transparent
+    - box-shadow: none
+    - padding: 10px 0 2px
+    - margin: '0'
+    name:
+    - color: rgba(255,255,255,0.35)
+    - font-size: 10px
+    - font-weight: '700'
+    - letter-spacing: 3px
+    - text-align: left
+    - justify-self: start
+- type: horizontal-stack
+  cards:
+  - type: custom:button-card
+    name: LOCK
+    icon: mdi:lock
+    show_state: false
+    show_label: true
+    label: '[[[ const s=states[''lock.YOUR_CAR'']?.state;return s===''locked''?''Secured'':s===''unlocked''?''Tap to lock'':''''; ]]]'
+    tap_action:
+      action: call-service
+      service: lock.lock
+      target:
+        entity_id: lock.YOUR_CAR
+      confirmation:
+        text: Lock the car?
+    styles:
+      card:
+      - background: '[[[ return (()=>{ return states[''lock.YOUR_CAR'']?.state===''locked''; })() ? ''linear-gradient(160deg,rgba(0,232,122,0.18),rgba(0,232,122,0.08))'' : ''linear-gradient(160deg,rgba(26,26,32,0.92),rgba(10,10,15,0.97))''; ]]]'
+      - border: 1px solid rgba(255,255,255,0.07)
+      - border-top: '[[[ return (()=>{ return states[''lock.YOUR_CAR'']?.state===''locked''; })() ? ''1px solid rgba(0,232,122,0.42)'' : ''1px solid rgba(255,255,255,0.15)''; ]]]'
+      - border-radius: 14px
+      - padding: 14px 0 10px
+      - margin: 0 3px
+      - box-shadow: '[[[ return (()=>{ return states[''lock.YOUR_CAR'']?.state===''locked''; })() ? ''0 8px 28px rgba(0,0,0,0.65),0 0 22px rgba(0,232,122,0.12)'' : ''0 8px 28px rgba(0,0,0,0.65)''; ]]]'
+      icon:
+      - color: '#00e87a'
+      - width: 22px
+      - filter: '[[[ return (()=>{ return states[''lock.YOUR_CAR'']?.state===''locked''; })() ? ''drop-shadow(0 0 5px rgba(0,232,122,0.7))'' : ''none''; ]]]'
+      name:
+      - color: '#00e87a'
+      - font-size: 10px
+      - font-weight: '700'
+      - letter-spacing: 0.5px
+      label:
+      - color: rgba(0,232,122,0.55)
+      - font-size: 9px
+      - font-weight: '500'
+      - margin-top: 2px
+      - font-variant-numeric: tabular-nums
+  - type: custom:button-card
+    name: UNLOCK
+    icon: mdi:lock-open-variant
+    show_state: false
+    show_label: true
+    label: '[[[ const s=states[''lock.YOUR_CAR'']?.state;return s===''unlocked''?''Unlocked'':s===''locked''?''Tap to unlock'':''''; ]]]'
+    tap_action:
+      action: call-service
+      service: lock.unlock
+      target:
+        entity_id: lock.YOUR_CAR
+      confirmation:
+        text: Unlock the car?
+    styles:
+      card:
+      - background: '[[[ return (()=>{ return states[''lock.YOUR_CAR'']?.state===''unlocked''; })() ? ''linear-gradient(160deg,rgba(255,193,7,0.18),rgba(255,193,7,0.08))'' : ''linear-gradient(160deg,rgba(26,26,32,0.92),rgba(10,10,15,0.97))''; ]]]'
+      - border: 1px solid rgba(255,255,255,0.07)
+      - border-top: '[[[ return (()=>{ return states[''lock.YOUR_CAR'']?.state===''unlocked''; })() ? ''1px solid rgba(255,193,7,0.42)'' : ''1px solid rgba(255,255,255,0.15)''; ]]]'
+      - border-radius: 14px
+      - padding: 14px 0 10px
+      - margin: 0 3px
+      - box-shadow: '[[[ return (()=>{ return states[''lock.YOUR_CAR'']?.state===''unlocked''; })() ? ''0 8px 28px rgba(0,0,0,0.65),0 0 22px rgba(255,193,7,0.12)'' : ''0 8px 28px rgba(0,0,0,0.65)''; ]]]'
+      icon:
+      - color: '#ffc107'
+      - width: 22px
+      - filter: '[[[ return (()=>{ return states[''lock.YOUR_CAR'']?.state===''unlocked''; })() ? ''drop-shadow(0 0 5px rgba(255,193,7,0.7))'' : ''none''; ]]]'
+      name:
+      - color: '#ffc107'
+      - font-size: 10px
+      - font-weight: '700'
+      - letter-spacing: 0.5px
+      label:
+      - color: rgba(255,193,7,0.55)
+      - font-size: 9px
+      - font-weight: '500'
+      - margin-top: 2px
+      - font-variant-numeric: tabular-nums
+- type: horizontal-stack
+  cards:
+  - type: custom:button-card
+    name: START
+    icon: mdi:engine
+    show_state: false
+    show_label: true
+    label: '[[[ const t=states[''timer.toyota_engine''];if(!t||t.state!==''active'')return '''';const rem=Math.max(0,(new Date(t.attributes.finishes_at).getTime()-Date.now())/1000);return Math.floor(rem/60)+'':''+String(Math.floor(rem%60)).padStart(2,''0'')+'' left''; ]]]'
+    tap_action:
+      action: call-service
+      service: script.toyota_remote_start
+      confirmation:
+        text: Remote start now? It uses your saved climate settings. Never start in an enclosed garage.
+    styles:
+      card:
+      - background: '[[[ return (()=>{ return states[''binary_sensor.YOUR_CAR_remote_start'']?.state===''on''; })() ? ''linear-gradient(160deg,rgba(0,229,255,0.18),rgba(0,229,255,0.08))'' : ''linear-gradient(160deg,rgba(26,26,32,0.92),rgba(10,10,15,0.97))''; ]]]'
+      - border: 1px solid rgba(255,255,255,0.07)
+      - border-top: '[[[ return (()=>{ return states[''binary_sensor.YOUR_CAR_remote_start'']?.state===''on''; })() ? ''1px solid rgba(0,229,255,0.42)'' : ''1px solid rgba(255,255,255,0.15)''; ]]]'
+      - border-radius: 14px
+      - padding: 14px 0 10px
+      - margin: 0 3px
+      - box-shadow: '[[[ return (()=>{ return states[''binary_sensor.YOUR_CAR_remote_start'']?.state===''on''; })() ? ''0 8px 28px rgba(0,0,0,0.65),0 0 22px rgba(0,229,255,0.12)'' : ''0 8px 28px rgba(0,0,0,0.65)''; ]]]'
+      icon:
+      - color: '#00e5ff'
+      - width: 22px
+      - filter: '[[[ return (()=>{ return states[''binary_sensor.YOUR_CAR_remote_start'']?.state===''on''; })() ? ''drop-shadow(0 0 5px rgba(0,229,255,0.7))'' : ''none''; ]]]'
+      name:
+      - color: '#00e5ff'
+      - font-size: 10px
+      - font-weight: '700'
+      - letter-spacing: 0.5px
+      label:
+      - color: rgba(0,229,255,0.55)
+      - font-size: 9px
+      - font-weight: '500'
+      - margin-top: 2px
+      - font-variant-numeric: tabular-nums
+  - type: custom:button-card
+    name: STOP
+    icon: mdi:engine-off
+    show_state: false
+    show_label: true
+    label: '[[[ return states[''binary_sensor.YOUR_CAR_remote_start'']?.state===''on''?''Running'':''''; ]]]'
+    tap_action:
+      action: call-service
+      service: script.toyota_remote_stop
+      confirmation:
+        text: Stop the engine?
+    styles:
+      card:
+      - background: '[[[ return (()=>{ return states[''binary_sensor.YOUR_CAR_remote_start'']?.state===''on''; })() ? ''linear-gradient(160deg,rgba(255,68,68,0.18),rgba(255,68,68,0.08))'' : ''linear-gradient(160deg,rgba(26,26,32,0.92),rgba(10,10,15,0.97))''; ]]]'
+      - border: 1px solid rgba(255,255,255,0.07)
+      - border-top: '[[[ return (()=>{ return states[''binary_sensor.YOUR_CAR_remote_start'']?.state===''on''; })() ? ''1px solid rgba(255,68,68,0.42)'' : ''1px solid rgba(255,255,255,0.15)''; ]]]'
+      - border-radius: 14px
+      - padding: 14px 0 10px
+      - margin: 0 3px
+      - box-shadow: '[[[ return (()=>{ return states[''binary_sensor.YOUR_CAR_remote_start'']?.state===''on''; })() ? ''0 8px 28px rgba(0,0,0,0.65),0 0 22px rgba(255,68,68,0.12)'' : ''0 8px 28px rgba(0,0,0,0.65)''; ]]]'
+      icon:
+      - color: '#ff4444'
+      - width: 22px
+      - filter: '[[[ return (()=>{ return states[''binary_sensor.YOUR_CAR_remote_start'']?.state===''on''; })() ? ''drop-shadow(0 0 5px rgba(255,68,68,0.7))'' : ''none''; ]]]'
+      name:
+      - color: '#ff4444'
+      - font-size: 10px
+      - font-weight: '700'
+      - letter-spacing: 0.5px
+      label:
+      - color: rgba(255,68,68,0.55)
+      - font-size: 9px
+      - font-weight: '500'
+      - margin-top: 2px
+      - font-variant-numeric: tabular-nums
+- type: horizontal-stack
+  cards:
+  - type: custom:button-card
+    name: HAZARDS
+    icon: mdi:hazard-lights
+    show_state: false
+    show_label: true
+    label: '[[[ return ''''; ]]]'
+    tap_action:
+      action: call-service
+      service: button.press
+      target:
+        entity_id: button.YOUR_CAR_flash_hazards
+      confirmation:
+        text: Flash the hazard lights?
+    styles:
+      card:
+      - background: '[[[ return (()=>{ return false; })() ? ''linear-gradient(160deg,rgba(255,145,0,0.18),rgba(255,145,0,0.08))'' : ''linear-gradient(160deg,rgba(26,26,32,0.92),rgba(10,10,15,0.97))''; ]]]'
+      - border: 1px solid rgba(255,255,255,0.07)
+      - border-top: '[[[ return (()=>{ return false; })() ? ''1px solid rgba(255,145,0,0.42)'' : ''1px solid rgba(255,255,255,0.15)''; ]]]'
+      - border-radius: 14px
+      - padding: 14px 0 10px
+      - margin: 0 3px
+      - box-shadow: '[[[ return (()=>{ return false; })() ? ''0 8px 28px rgba(0,0,0,0.65),0 0 22px rgba(255,145,0,0.12)'' : ''0 8px 28px rgba(0,0,0,0.65)''; ]]]'
+      icon:
+      - color: '#ff9100'
+      - width: 22px
+      - filter: '[[[ return (()=>{ return false; })() ? ''drop-shadow(0 0 5px rgba(255,145,0,0.7))'' : ''none''; ]]]'
+      name:
+      - color: '#ff9100'
+      - font-size: 10px
+      - font-weight: '700'
+      - letter-spacing: 0.5px
+      label:
+      - color: rgba(255,145,0,0.55)
+      - font-size: 9px
+      - font-weight: '500'
+      - margin-top: 2px
+      - font-variant-numeric: tabular-nums
+  - type: custom:button-card
+    name: FIND
+    icon: mdi:car-search
+    show_state: false
+    show_label: true
+    label: '[[[ return ''''; ]]]'
+    tap_action:
+      action: call-service
+      service: button.press
+      target:
+        entity_id: button.YOUR_CAR_find_vehicle
+      confirmation:
+        text: Flash lights / beep to find the car?
+    styles:
+      card:
+      - background: '[[[ return (()=>{ return false; })() ? ''linear-gradient(160deg,rgba(179,136,255,0.18),rgba(179,136,255,0.08))'' : ''linear-gradient(160deg,rgba(26,26,32,0.92),rgba(10,10,15,0.97))''; ]]]'
+      - border: 1px solid rgba(255,255,255,0.07)
+      - border-top: '[[[ return (()=>{ return false; })() ? ''1px solid rgba(179,136,255,0.42)'' : ''1px solid rgba(255,255,255,0.15)''; ]]]'
+      - border-radius: 14px
+      - padding: 14px 0 10px
+      - margin: 0 3px
+      - box-shadow: '[[[ return (()=>{ return false; })() ? ''0 8px 28px rgba(0,0,0,0.65),0 0 22px rgba(179,136,255,0.12)'' : ''0 8px 28px rgba(0,0,0,0.65)''; ]]]'
+      icon:
+      - color: '#b388ff'
+      - width: 22px
+      - filter: '[[[ return (()=>{ return false; })() ? ''drop-shadow(0 0 5px rgba(179,136,255,0.7))'' : ''none''; ]]]'
+      name:
+      - color: '#b388ff'
+      - font-size: 10px
+      - font-weight: '700'
+      - letter-spacing: 0.5px
+      label:
+      - color: rgba(179,136,255,0.55)
+      - font-size: 9px
+      - font-weight: '500'
+      - margin-top: 2px
+      - font-variant-numeric: tabular-nums
+  - type: custom:button-card
+    name: REFRESH
+    icon: mdi:refresh
+    show_state: false
+    show_label: true
+    label: '[[[ const u=states[''sensor.YOUR_CAR_odometer'']?.last_updated;return u?new Date(u).toLocaleTimeString([], {hour:''numeric'',minute:''2-digit''}):''''; ]]]'
+    tap_action:
+      action: call-service
+      service: button.press
+      target:
+        entity_id: button.YOUR_CAR_refresh_status
+    styles:
+      card:
+      - background: '[[[ return (()=>{ return false; })() ? ''linear-gradient(160deg,rgba(144,202,249,0.18),rgba(144,202,249,0.08))'' : ''linear-gradient(160deg,rgba(26,26,32,0.92),rgba(10,10,15,0.97))''; ]]]'
+      - border: 1px solid rgba(255,255,255,0.07)
+      - border-top: '[[[ return (()=>{ return false; })() ? ''1px solid rgba(144,202,249,0.42)'' : ''1px solid rgba(255,255,255,0.15)''; ]]]'
+      - border-radius: 14px
+      - padding: 14px 0 10px
+      - margin: 0 3px
+      - box-shadow: '[[[ return (()=>{ return false; })() ? ''0 8px 28px rgba(0,0,0,0.65),0 0 22px rgba(144,202,249,0.12)'' : ''0 8px 28px rgba(0,0,0,0.65)''; ]]]'
+      icon:
+      - color: '#90caf9'
+      - width: 22px
+      - filter: '[[[ return (()=>{ return false; })() ? ''drop-shadow(0 0 5px rgba(144,202,249,0.7))'' : ''none''; ]]]'
+      name:
+      - color: '#90caf9'
+      - font-size: 10px
+      - font-weight: '700'
+      - letter-spacing: 0.5px
+      label:
+      - color: rgba(144,202,249,0.55)
+      - font-size: 9px
+      - font-weight: '500'
+      - margin-top: 2px
+      - font-variant-numeric: tabular-nums
+- type: custom:button-card
+  name: CLIMATE · APPLIED ON REMOTE START
+  show_icon: false
+  tap_action:
+    action: none
+  styles:
+    card:
+    - background: transparent
+    - box-shadow: none
+    - padding: 10px 0 2px
+    - margin: '0'
+    name:
+    - color: rgba(255,255,255,0.35)
+    - font-size: 10px
+    - font-weight: '700'
+    - letter-spacing: 3px
+    - text-align: left
+    - justify-self: start
+- type: grid
+  columns: 4
+  square: false
+  cards:
+  - type: custom:button-card
+    icon: mdi:minus
+    show_name: false
+    tap_action:
+      action: call-service
+      service: script.toyota_climate_temp_step
+      service_data:
+        step: -1
+    styles:
+      card:
+      - background: linear-gradient(160deg,rgba(26,26,32,0.92),rgba(10,10,15,0.97))
+      - border-radius: 14px
+      - border: 1px solid rgba(255,255,255,0.07)
+      - height: 64px
+      - margin: 0 2px
+      icon:
+      - color: '#ff9100'
+      - width: 26px
+  - type: custom:button-card
+    show_icon: false
+    show_name: false
+    show_state: false
+    show_label: true
+    tap_action:
+      action: more-info
+      entity: number.YOUR_CAR_climate_temperature
+    label: '[[[ const e=states[''number.YOUR_CAR_climate_temperature'']; const v=parseFloat(e?.state);
+
+      const use=states[''switch.YOUR_CAR_use_climate_settings'']?.state===''on'';
+
+      return `<div style="text-align:center;padding:8px 0"><div style="font-size:30px;font-weight:200;color:${use?''#ff9100'':''rgba(255,255,255,0.4)''};font-variant-numeric:tabular-nums">${isNaN(v)?''—'':Math.round(v)+''°''}</div><div style="font-size:9px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,0.35)">${use?''CABIN TEMP'':''SETTINGS OFF''}</div></div>`; ]]]'
+    styles:
+      card:
+      - background: rgba(255,255,255,0.04)
+      - border-radius: 16px
+      - padding: '0'
+      - margin: 2px 0
+      - box-shadow: none
+      - height: 64px
+      - margin: 0 2px
+      - display: flex
+      - align-items: center
+      label:
+      - width: 100%
+      - margin: '0'
+      - padding: '0'
+      - white-space: normal
+  - type: custom:button-card
+    icon: mdi:plus
+    show_name: false
+    tap_action:
+      action: call-service
+      service: script.toyota_climate_temp_step
+      service_data:
+        step: 1
+    styles:
+      card:
+      - background: linear-gradient(160deg,rgba(26,26,32,0.92),rgba(10,10,15,0.97))
+      - border-radius: 14px
+      - border: 1px solid rgba(255,255,255,0.07)
+      - height: 64px
+      - margin: 0 2px
+      icon:
+      - color: '#ff9100'
+      - width: 26px
+  - type: custom:button-card
+    name: USE
+    icon: mdi:car-cog
+    show_state: false
+    show_label: true
+    label: '[[[ const s=states[''switch.YOUR_CAR_use_climate_settings'']?.state; return s===''on''?''On'':s===''off''?''Off'':(s||''''); ]]]'
+    tap_action:
+      action: toggle
+      entity: switch.YOUR_CAR_use_climate_settings
+    styles:
+      card:
+      - background: '[[[ return (()=>{ return states[''switch.YOUR_CAR_use_climate_settings'']?.state === ''on''; })() ? ''linear-gradient(160deg,rgba(255,145,0,0.18),rgba(255,145,0,0.08))'' : ''linear-gradient(160deg,rgba(26,26,32,0.92),rgba(10,10,15,0.97))''; ]]]'
+      - border: 1px solid rgba(255,255,255,0.07)
+      - border-top: '[[[ return (()=>{ return states[''switch.YOUR_CAR_use_climate_settings'']?.state === ''on''; })() ? ''1px solid rgba(255,145,0,0.42)'' : ''1px solid rgba(255,255,255,0.15)''; ]]]'
+      - border-radius: 14px
+      - padding: 10px 0 8px
+      - margin: 0 2px
+      - box-shadow: '[[[ return (()=>{ return states[''switch.YOUR_CAR_use_climate_settings'']?.state === ''on''; })() ? ''0 8px 28px rgba(0,0,0,0.65),0 0 22px rgba(255,145,0,0.12)'' : ''0 8px 28px rgba(0,0,0,0.65)''; ]]]'
+      icon:
+      - color: '#ff9100'
+      - width: 22px
+      - filter: '[[[ return (()=>{ return states[''switch.YOUR_CAR_use_climate_settings'']?.state === ''on''; })() ? ''drop-shadow(0 0 5px rgba(255,145,0,0.7))'' : ''none''; ]]]'
+      name:
+      - color: '#ff9100'
+      - font-size: 10px
+      - font-weight: '700'
+      - letter-spacing: 0.5px
+      label:
+      - color: rgba(255,145,0,0.55)
+      - font-size: 9px
+      - font-weight: '500'
+      - margin-top: 2px
+      - font-variant-numeric: tabular-nums
+    entity: switch.YOUR_CAR_use_climate_settings
+    hold_action:
+      action: more-info
+      entity: switch.YOUR_CAR_use_climate_settings
+- type: horizontal-stack
+  cards:
+  - type: custom:button-card
+    name: FRONT DEF
+    icon: mdi:car-defrost-front
+    show_state: false
+    show_label: true
+    label: '[[[ const s=states[''switch.YOUR_CAR_front_defroster'']?.state; return s===''on''?''On'':s===''off''?''Off'':(s||''''); ]]]'
+    tap_action:
+      action: toggle
+      entity: switch.YOUR_CAR_front_defroster
+    styles:
+      card:
+      - background: '[[[ return (()=>{ return states[''switch.YOUR_CAR_front_defroster'']?.state === ''on''; })() ? ''linear-gradient(160deg,rgba(255,145,0,0.18),rgba(255,145,0,0.08))'' : ''linear-gradient(160deg,rgba(26,26,32,0.92),rgba(10,10,15,0.97))''; ]]]'
+      - border: 1px solid rgba(255,255,255,0.07)
+      - border-top: '[[[ return (()=>{ return states[''switch.YOUR_CAR_front_defroster'']?.state === ''on''; })() ? ''1px solid rgba(255,145,0,0.42)'' : ''1px solid rgba(255,255,255,0.15)''; ]]]'
+      - border-radius: 14px
+      - padding: 10px 0 8px
+      - margin: 0 2px
+      - box-shadow: '[[[ return (()=>{ return states[''switch.YOUR_CAR_front_defroster'']?.state === ''on''; })() ? ''0 8px 28px rgba(0,0,0,0.65),0 0 22px rgba(255,145,0,0.12)'' : ''0 8px 28px rgba(0,0,0,0.65)''; ]]]'
+      icon:
+      - color: '#ff9100'
+      - width: 22px
+      - filter: '[[[ return (()=>{ return states[''switch.YOUR_CAR_front_defroster'']?.state === ''on''; })() ? ''drop-shadow(0 0 5px rgba(255,145,0,0.7))'' : ''none''; ]]]'
+      name:
+      - color: '#ff9100'
+      - font-size: 10px
+      - font-weight: '700'
+      - letter-spacing: 0.5px
+      label:
+      - color: rgba(255,145,0,0.55)
+      - font-size: 9px
+      - font-weight: '500'
+      - margin-top: 2px
+      - font-variant-numeric: tabular-nums
+    entity: switch.YOUR_CAR_front_defroster
+    hold_action:
+      action: more-info
+      entity: switch.YOUR_CAR_front_defroster
+  - type: custom:button-card
+    name: REAR DEF
+    icon: mdi:car-defrost-rear
+    show_state: false
+    show_label: true
+    label: '[[[ const s=states[''switch.YOUR_CAR_rear_defroster'']?.state; return s===''on''?''On'':s===''off''?''Off'':(s||''''); ]]]'
+    tap_action:
+      action: toggle
+      entity: switch.YOUR_CAR_rear_defroster
+    styles:
+      card:
+      - background: '[[[ return (()=>{ return states[''switch.YOUR_CAR_rear_defroster'']?.state === ''on''; })() ? ''linear-gradient(160deg,rgba(255,145,0,0.18),rgba(255,145,0,0.08))'' : ''linear-gradient(160deg,rgba(26,26,32,0.92),rgba(10,10,15,0.97))''; ]]]'
+      - border: 1px solid rgba(255,255,255,0.07)
+      - border-top: '[[[ return (()=>{ return states[''switch.YOUR_CAR_rear_defroster'']?.state === ''on''; })() ? ''1px solid rgba(255,145,0,0.42)'' : ''1px solid rgba(255,255,255,0.15)''; ]]]'
+      - border-radius: 14px
+      - padding: 10px 0 8px
+      - margin: 0 2px
+      - box-shadow: '[[[ return (()=>{ return states[''switch.YOUR_CAR_rear_defroster'']?.state === ''on''; })() ? ''0 8px 28px rgba(0,0,0,0.65),0 0 22px rgba(255,145,0,0.12)'' : ''0 8px 28px rgba(0,0,0,0.65)''; ]]]'
+      icon:
+      - color: '#ff9100'
+      - width: 22px
+      - filter: '[[[ return (()=>{ return states[''switch.YOUR_CAR_rear_defroster'']?.state === ''on''; })() ? ''drop-shadow(0 0 5px rgba(255,145,0,0.7))'' : ''none''; ]]]'
+      name:
+      - color: '#ff9100'
+      - font-size: 10px
+      - font-weight: '700'
+      - letter-spacing: 0.5px
+      label:
+      - color: rgba(255,145,0,0.55)
+      - font-size: 9px
+      - font-weight: '500'
+      - margin-top: 2px
+      - font-variant-numeric: tabular-nums
+    entity: switch.YOUR_CAR_rear_defroster
+    hold_action:
+      action: more-info
+      entity: switch.YOUR_CAR_rear_defroster
+  - type: custom:button-card
+    name: WHEEL
+    icon: mdi:steering
+    show_state: false
+    show_label: true
+    label: '[[[ const s=states[''switch.YOUR_CAR_steering_wheel_heat'']?.state; return s===''on''?''On'':s===''off''?''Off'':(s||''''); ]]]'
+    tap_action:
+      action: toggle
+      entity: switch.YOUR_CAR_steering_wheel_heat
+    styles:
+      card:
+      - background: '[[[ return (()=>{ return states[''switch.YOUR_CAR_steering_wheel_heat'']?.state === ''on''; })() ? ''linear-gradient(160deg,rgba(255,145,0,0.18),rgba(255,145,0,0.08))'' : ''linear-gradient(160deg,rgba(26,26,32,0.92),rgba(10,10,15,0.97))''; ]]]'
+      - border: 1px solid rgba(255,255,255,0.07)
+      - border-top: '[[[ return (()=>{ return states[''switch.YOUR_CAR_steering_wheel_heat'']?.state === ''on''; })() ? ''1px solid rgba(255,145,0,0.42)'' : ''1px solid rgba(255,255,255,0.15)''; ]]]'
+      - border-radius: 14px
+      - padding: 10px 0 8px
+      - margin: 0 2px
+      - box-shadow: '[[[ return (()=>{ return states[''switch.YOUR_CAR_steering_wheel_heat'']?.state === ''on''; })() ? ''0 8px 28px rgba(0,0,0,0.65),0 0 22px rgba(255,145,0,0.12)'' : ''0 8px 28px rgba(0,0,0,0.65)''; ]]]'
+      icon:
+      - color: '#ff9100'
+      - width: 22px
+      - filter: '[[[ return (()=>{ return states[''switch.YOUR_CAR_steering_wheel_heat'']?.state === ''on''; })() ? ''drop-shadow(0 0 5px rgba(255,145,0,0.7))'' : ''none''; ]]]'
+      name:
+      - color: '#ff9100'
+      - font-size: 10px
+      - font-weight: '700'
+      - letter-spacing: 0.5px
+      label:
+      - color: rgba(255,145,0,0.55)
+      - font-size: 9px
+      - font-weight: '500'
+      - margin-top: 2px
+      - font-variant-numeric: tabular-nums
+    entity: switch.YOUR_CAR_steering_wheel_heat
+    hold_action:
+      action: more-info
+      entity: switch.YOUR_CAR_steering_wheel_heat
+- type: horizontal-stack
+  cards:
+  - type: custom:button-card
+    name: DRIVER
+    icon: mdi:car-seat-heater
+    show_state: false
+    show_label: true
+    label: '[[[ return states[''select.YOUR_CAR_driver_seat_climate'']?.state||''''; ]]]'
+    tap_action:
+      action: call-service
+      service: select.select_next
+      target:
+        entity_id: select.YOUR_CAR_driver_seat_climate
+      service_data:
+        cycle: true
+    styles:
+      card:
+      - background: '[[[ return (()=>{ const s=states[''select.YOUR_CAR_driver_seat_climate'']?.state;return !!s&&![''Off'',''off'',''unknown'',''unavailable''].includes(s); })() ? ''linear-gradient(160deg,rgba(255,145,0,0.18),rgba(255,145,0,0.08))'' : ''linear-gradient(160deg,rgba(26,26,32,0.92),rgba(10,10,15,0.97))''; ]]]'
+      - border: 1px solid rgba(255,255,255,0.07)
+      - border-top: '[[[ return (()=>{ const s=states[''select.YOUR_CAR_driver_seat_climate'']?.state;return !!s&&![''Off'',''off'',''unknown'',''unavailable''].includes(s); })() ? ''1px solid rgba(255,145,0,0.42)'' : ''1px solid rgba(255,255,255,0.15)''; ]]]'
+      - border-radius: 14px
+      - padding: 10px 0 8px
+      - margin: 0 2px
+      - box-shadow: '[[[ return (()=>{ const s=states[''select.YOUR_CAR_driver_seat_climate'']?.state;return !!s&&![''Off'',''off'',''unknown'',''unavailable''].includes(s); })() ? ''0 8px 28px rgba(0,0,0,0.65),0 0 22px rgba(255,145,0,0.12)'' : ''0 8px 28px rgba(0,0,0,0.65)''; ]]]'
+      icon:
+      - color: '#ff9100'
+      - width: 22px
+      - filter: '[[[ return (()=>{ const s=states[''select.YOUR_CAR_driver_seat_climate'']?.state;return !!s&&![''Off'',''off'',''unknown'',''unavailable''].includes(s); })() ? ''drop-shadow(0 0 5px rgba(255,145,0,0.7))'' : ''none''; ]]]'
+      name:
+      - color: '#ff9100'
+      - font-size: 10px
+      - font-weight: '700'
+      - letter-spacing: 0.5px
+      label:
+      - color: rgba(255,145,0,0.55)
+      - font-size: 9px
+      - font-weight: '500'
+      - margin-top: 2px
+      - font-variant-numeric: tabular-nums
+    entity: select.YOUR_CAR_driver_seat_climate
+    hold_action:
+      action: more-info
+      entity: select.YOUR_CAR_driver_seat_climate
+  - type: custom:button-card
+    name: PASSENGER
+    icon: mdi:car-seat-heater
+    show_state: false
+    show_label: true
+    label: '[[[ return states[''select.YOUR_CAR_passenger_seat_climate'']?.state||''''; ]]]'
+    tap_action:
+      action: call-service
+      service: select.select_next
+      target:
+        entity_id: select.YOUR_CAR_passenger_seat_climate
+      service_data:
+        cycle: true
+    styles:
+      card:
+      - background: '[[[ return (()=>{ const s=states[''select.YOUR_CAR_passenger_seat_climate'']?.state;return !!s&&![''Off'',''off'',''unknown'',''unavailable''].includes(s); })() ? ''linear-gradient(160deg,rgba(255,145,0,0.18),rgba(255,145,0,0.08))'' : ''linear-gradient(160deg,rgba(26,26,32,0.92),rgba(10,10,15,0.97))''; ]]]'
+      - border: 1px solid rgba(255,255,255,0.07)
+      - border-top: '[[[ return (()=>{ const s=states[''select.YOUR_CAR_passenger_seat_climate'']?.state;return !!s&&![''Off'',''off'',''unknown'',''unavailable''].includes(s); })() ? ''1px solid rgba(255,145,0,0.42)'' : ''1px solid rgba(255,255,255,0.15)''; ]]]'
+      - border-radius: 14px
+      - padding: 10px 0 8px
+      - margin: 0 2px
+      - box-shadow: '[[[ return (()=>{ const s=states[''select.YOUR_CAR_passenger_seat_climate'']?.state;return !!s&&![''Off'',''off'',''unknown'',''unavailable''].includes(s); })() ? ''0 8px 28px rgba(0,0,0,0.65),0 0 22px rgba(255,145,0,0.12)'' : ''0 8px 28px rgba(0,0,0,0.65)''; ]]]'
+      icon:
+      - color: '#ff9100'
+      - width: 22px
+      - filter: '[[[ return (()=>{ const s=states[''select.YOUR_CAR_passenger_seat_climate'']?.state;return !!s&&![''Off'',''off'',''unknown'',''unavailable''].includes(s); })() ? ''drop-shadow(0 0 5px rgba(255,145,0,0.7))'' : ''none''; ]]]'
+      name:
+      - color: '#ff9100'
+      - font-size: 10px
+      - font-weight: '700'
+      - letter-spacing: 0.5px
+      label:
+      - color: rgba(255,145,0,0.55)
+      - font-size: 9px
+      - font-weight: '500'
+      - margin-top: 2px
+      - font-variant-numeric: tabular-nums
+    entity: select.YOUR_CAR_passenger_seat_climate
+    hold_action:
+      action: more-info
+      entity: select.YOUR_CAR_passenger_seat_climate
+  - type: custom:button-card
+    name: LONG RUN
+    icon: mdi:timer-plus-outline
+    show_state: false
+    show_label: true
+    label: '[[[ const s=states[''switch.YOUR_CAR_longer_climate_runtime'']?.state; return s===''on''?''On'':s===''off''?''Off'':(s||''''); ]]]'
+    tap_action:
+      action: toggle
+      entity: switch.YOUR_CAR_longer_climate_runtime
+    styles:
+      card:
+      - background: '[[[ return (()=>{ return states[''switch.YOUR_CAR_longer_climate_runtime'']?.state === ''on''; })() ? ''linear-gradient(160deg,rgba(255,145,0,0.18),rgba(255,145,0,0.08))'' : ''linear-gradient(160deg,rgba(26,26,32,0.92),rgba(10,10,15,0.97))''; ]]]'
+      - border: 1px solid rgba(255,255,255,0.07)
+      - border-top: '[[[ return (()=>{ return states[''switch.YOUR_CAR_longer_climate_runtime'']?.state === ''on''; })() ? ''1px solid rgba(255,145,0,0.42)'' : ''1px solid rgba(255,255,255,0.15)''; ]]]'
+      - border-radius: 14px
+      - padding: 10px 0 8px
+      - margin: 0 2px
+      - box-shadow: '[[[ return (()=>{ return states[''switch.YOUR_CAR_longer_climate_runtime'']?.state === ''on''; })() ? ''0 8px 28px rgba(0,0,0,0.65),0 0 22px rgba(255,145,0,0.12)'' : ''0 8px 28px rgba(0,0,0,0.65)''; ]]]'
+      icon:
+      - color: '#ff9100'
+      - width: 22px
+      - filter: '[[[ return (()=>{ return states[''switch.YOUR_CAR_longer_climate_runtime'']?.state === ''on''; })() ? ''drop-shadow(0 0 5px rgba(255,145,0,0.7))'' : ''none''; ]]]'
+      name:
+      - color: '#ff9100'
+      - font-size: 10px
+      - font-weight: '700'
+      - letter-spacing: 0.5px
+      label:
+      - color: rgba(255,145,0,0.55)
+      - font-size: 9px
+      - font-weight: '500'
+      - margin-top: 2px
+      - font-variant-numeric: tabular-nums
+    entity: switch.YOUR_CAR_longer_climate_runtime
+    hold_action:
+      action: more-info
+      entity: switch.YOUR_CAR_longer_climate_runtime
+- type: custom:button-card
+  name: REMOTE START SCHEDULE
+  show_icon: false
+  tap_action:
+    action: none
+  styles:
+    card:
+    - background: transparent
+    - box-shadow: none
+    - padding: 10px 0 2px
+    - margin: '0'
+    name:
+    - color: rgba(255,255,255,0.35)
+    - font-size: 10px
+    - font-weight: '700'
+    - letter-spacing: 3px
+    - text-align: left
+    - justify-self: start
+- type: custom:button-card
+  show_icon: false
+  show_name: false
+  show_state: false
+  show_label: true
+  tap_action:
+    action: none
+  label: '[[[ const on=states[''input_boolean.toyota_schedule_enabled'']?.state===''on'';
+
+    const one=states[''input_boolean.toyota_one_time_enabled'']?.state===''on'';
+
+    const gate=states[''input_boolean.toyota_weather_gate'']?.state===''on'';
+
+    const tm=states[''input_datetime.toyota_schedule_time'']?.state, days=(states[''input_text.toyota_schedule_days'']?.state||'''').split('','').filter(Boolean);
+
+    const order=[''sun'',''mon'',''tue'',''wed'',''thu'',''fri'',''sat''];
+
+    const fmtT=s=>{if(!s||s===''unknown'')return ''—'';const [h,m]=s.split('':'');const d=new Date();d.setHours(+h,+m,0,0);return d.toLocaleTimeString([], {hour:''numeric'',minute:''2-digit''});};
+
+    let next=null;
+
+    if(on&&tm&&days.length){const [h,m]=tm.split('':'');for(let i=0;i<8;i++){const d=new Date();d.setDate(d.getDate()+i);d.setHours(+h,+m,0,0);if(d>new Date()&&days.includes(order[d.getDay()])){next=d;break;}}}
+
+    const ot=states[''input_datetime.toyota_one_time_start'']?.state; let oneD=null;
+
+    if(one&&ot&&ot!==''unknown''){const d=new Date(ot.replace('' '',''T''));if(d>new Date()) oneD=d;}
+
+    const cand=[next,oneD].filter(Boolean).sort((a,b)=>a-b)[0];
+
+    const nextTxt=cand?cand.toLocaleString([], {weekday:''short'',month:''short'',day:''numeric'',hour:''numeric'',minute:''2-digit''}):''No start scheduled'';
+
+    const lo=parseFloat(states[''input_number.toyota_cold_below'']?.state), hi=parseFloat(states[''input_number.toyota_hot_above'']?.state);
+
+    return `<div style="padding:12px 16px"><div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:10px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,0.4)">NEXT AUTO-START</span><span style="font-size:13px;font-weight:600;color:${cand?''#00e5ff'':''rgba(255,255,255,0.4)''}">${nextTxt}</span></div>
+
+    <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:6px">${on?''Repeats ''+(days.length?days.join('' · ''):''(pick days)'')+'' at ''+fmtT(tm):''Recurring off''}${gate?` · only below ${isNaN(lo)?''?'':lo}° or above ${isNaN(hi)?''?'':hi}°`:''''}</div></div>`; ]]]'
+  styles:
+    card:
+    - background: rgba(255,255,255,0.04)
+    - border-radius: 16px
+    - padding: '0'
+    - margin: 2px 0
+    - box-shadow: none
+    label:
+    - width: 100%
+    - margin: '0'
+    - padding: '0'
+    - white-space: normal
+- type: horizontal-stack
+  cards:
+  - type: custom:button-card
+    name: REPEAT
+    icon: mdi:calendar-sync
+    show_state: false
+    show_label: true
+    label: '[[[ const s=states[''input_boolean.toyota_schedule_enabled'']?.state; return s===''on''?''On'':s===''off''?''Off'':(s||''''); ]]]'
+    tap_action:
+      action: toggle
+      entity: input_boolean.toyota_schedule_enabled
+    styles:
+      card:
+      - background: '[[[ return (()=>{ return states[''input_boolean.toyota_schedule_enabled'']?.state === ''on''; })() ? ''linear-gradient(160deg,rgba(0,229,255,0.18),rgba(0,229,255,0.08))'' : ''linear-gradient(160deg,rgba(26,26,32,0.92),rgba(10,10,15,0.97))''; ]]]'
+      - border: 1px solid rgba(255,255,255,0.07)
+      - border-top: '[[[ return (()=>{ return states[''input_boolean.toyota_schedule_enabled'']?.state === ''on''; })() ? ''1px solid rgba(0,229,255,0.42)'' : ''1px solid rgba(255,255,255,0.15)''; ]]]'
+      - border-radius: 14px
+      - padding: 10px 0 8px
+      - margin: 0 2px
+      - box-shadow: '[[[ return (()=>{ return states[''input_boolean.toyota_schedule_enabled'']?.state === ''on''; })() ? ''0 8px 28px rgba(0,0,0,0.65),0 0 22px rgba(0,229,255,0.12)'' : ''0 8px 28px rgba(0,0,0,0.65)''; ]]]'
+      icon:
+      - color: '#00e5ff'
+      - width: 22px
+      - filter: '[[[ return (()=>{ return states[''input_boolean.toyota_schedule_enabled'']?.state === ''on''; })() ? ''drop-shadow(0 0 5px rgba(0,229,255,0.7))'' : ''none''; ]]]'
+      name:
+      - color: '#00e5ff'
+      - font-size: 10px
+      - font-weight: '700'
+      - letter-spacing: 0.5px
+      label:
+      - color: rgba(0,229,255,0.55)
+      - font-size: 9px
+      - font-weight: '500'
+      - margin-top: 2px
+      - font-variant-numeric: tabular-nums
+    entity: input_boolean.toyota_schedule_enabled
+    hold_action:
+      action: more-info
+      entity: input_boolean.toyota_schedule_enabled
+  - type: custom:button-card
+    name: TIME
+    icon: mdi:clock-outline
+    show_state: false
+    show_label: true
+    label: '[[[ const s=states[''input_datetime.toyota_schedule_time'']?.state;if(!s||s===''unknown'')return ''Set'';const [h,m]=s.split('':'');const d=new Date();d.setHours(+h,+m);return d.toLocaleTimeString([], {hour:''numeric'',minute:''2-digit''}); ]]]'
+    tap_action:
+      action: more-info
+      entity: input_datetime.toyota_schedule_time
+    styles:
+      card:
+      - background: '[[[ return (()=>{ return true; })() ? ''linear-gradient(160deg,rgba(0,229,255,0.18),rgba(0,229,255,0.08))'' : ''linear-gradient(160deg,rgba(26,26,32,0.92),rgba(10,10,15,0.97))''; ]]]'
+      - border: 1px solid rgba(255,255,255,0.07)
+      - border-top: '[[[ return (()=>{ return true; })() ? ''1px solid rgba(0,229,255,0.42)'' : ''1px solid rgba(255,255,255,0.15)''; ]]]'
+      - border-radius: 14px
+      - padding: 10px 0 8px
+      - margin: 0 2px
+      - box-shadow: '[[[ return (()=>{ return true; })() ? ''0 8px 28px rgba(0,0,0,0.65),0 0 22px rgba(0,229,255,0.12)'' : ''0 8px 28px rgba(0,0,0,0.65)''; ]]]'
+      icon:
+      - color: '#00e5ff'
+      - width: 22px
+      - filter: '[[[ return (()=>{ return true; })() ? ''drop-shadow(0 0 5px rgba(0,229,255,0.7))'' : ''none''; ]]]'
+      name:
+      - color: '#00e5ff'
+      - font-size: 10px
+      - font-weight: '700'
+      - letter-spacing: 0.5px
+      label:
+      - color: rgba(0,229,255,0.55)
+      - font-size: 9px
+      - font-weight: '500'
+      - margin-top: 2px
+      - font-variant-numeric: tabular-nums
+    entity: input_datetime.toyota_schedule_time
+    hold_action:
+      action: more-info
+      entity: input_datetime.toyota_schedule_time
+- type: horizontal-stack
+  cards:
+  - type: custom:button-card
+    name: S
+    show_icon: false
+    tap_action:
+      action: call-service
+      service: script.toyota_toggle_schedule_day
+      service_data:
+        day: sun
+    entity: input_text.toyota_schedule_days
+    styles:
+      card:
+      - border-radius: 999px
+      - padding: 8px 0
+      - margin: 0 1px
+      - background: '[[[ return (states[''input_text.toyota_schedule_days'']?.state||'''').split('','').includes(''sun'') ? ''rgba(0,229,255,0.22)'' : ''rgba(255,255,255,0.05)''; ]]]'
+      - border: '[[[ return (states[''input_text.toyota_schedule_days'']?.state||'''').split('','').includes(''sun'') ? ''1px solid rgba(0,229,255,0.55)'' : ''1px solid rgba(255,255,255,0.08)''; ]]]'
+      name:
+      - font-size: 11px
+      - font-weight: '700'
+      - color: '[[[ return (states[''input_text.toyota_schedule_days'']?.state||'''').split('','').includes(''sun'') ? ''#00e5ff'' : ''rgba(255,255,255,0.45)''; ]]]'
+  - type: custom:button-card
+    name: M
+    show_icon: false
+    tap_action:
+      action: call-service
+      service: script.toyota_toggle_schedule_day
+      service_data:
+        day: mon
+    entity: input_text.toyota_schedule_days
+    styles:
+      card:
+      - border-radius: 999px
+      - padding: 8px 0
+      - margin: 0 1px
+      - background: '[[[ return (states[''input_text.toyota_schedule_days'']?.state||'''').split('','').includes(''mon'') ? ''rgba(0,229,255,0.22)'' : ''rgba(255,255,255,0.05)''; ]]]'
+      - border: '[[[ return (states[''input_text.toyota_schedule_days'']?.state||'''').split('','').includes(''mon'') ? ''1px solid rgba(0,229,255,0.55)'' : ''1px solid rgba(255,255,255,0.08)''; ]]]'
+      name:
+      - font-size: 11px
+      - font-weight: '700'
+      - color: '[[[ return (states[''input_text.toyota_schedule_days'']?.state||'''').split('','').includes(''mon'') ? ''#00e5ff'' : ''rgba(255,255,255,0.45)''; ]]]'
+  - type: custom:button-card
+    name: T
+    show_icon: false
+    tap_action:
+      action: call-service
+      service: script.toyota_toggle_schedule_day
+      service_data:
+        day: tue
+    entity: input_text.toyota_schedule_days
+    styles:
+      card:
+      - border-radius: 999px
+      - padding: 8px 0
+      - margin: 0 1px
+      - background: '[[[ return (states[''input_text.toyota_schedule_days'']?.state||'''').split('','').includes(''tue'') ? ''rgba(0,229,255,0.22)'' : ''rgba(255,255,255,0.05)''; ]]]'
+      - border: '[[[ return (states[''input_text.toyota_schedule_days'']?.state||'''').split('','').includes(''tue'') ? ''1px solid rgba(0,229,255,0.55)'' : ''1px solid rgba(255,255,255,0.08)''; ]]]'
+      name:
+      - font-size: 11px
+      - font-weight: '700'
+      - color: '[[[ return (states[''input_text.toyota_schedule_days'']?.state||'''').split('','').includes(''tue'') ? ''#00e5ff'' : ''rgba(255,255,255,0.45)''; ]]]'
+  - type: custom:button-card
+    name: W
+    show_icon: false
+    tap_action:
+      action: call-service
+      service: script.toyota_toggle_schedule_day
+      service_data:
+        day: wed
+    entity: input_text.toyota_schedule_days
+    styles:
+      card:
+      - border-radius: 999px
+      - padding: 8px 0
+      - margin: 0 1px
+      - background: '[[[ return (states[''input_text.toyota_schedule_days'']?.state||'''').split('','').includes(''wed'') ? ''rgba(0,229,255,0.22)'' : ''rgba(255,255,255,0.05)''; ]]]'
+      - border: '[[[ return (states[''input_text.toyota_schedule_days'']?.state||'''').split('','').includes(''wed'') ? ''1px solid rgba(0,229,255,0.55)'' : ''1px solid rgba(255,255,255,0.08)''; ]]]'
+      name:
+      - font-size: 11px
+      - font-weight: '700'
+      - color: '[[[ return (states[''input_text.toyota_schedule_days'']?.state||'''').split('','').includes(''wed'') ? ''#00e5ff'' : ''rgba(255,255,255,0.45)''; ]]]'
+  - type: custom:button-card
+    name: T
+    show_icon: false
+    tap_action:
+      action: call-service
+      service: script.toyota_toggle_schedule_day
+      service_data:
+        day: thu
+    entity: input_text.toyota_schedule_days
+    styles:
+      card:
+      - border-radius: 999px
+      - padding: 8px 0
+      - margin: 0 1px
+      - background: '[[[ return (states[''input_text.toyota_schedule_days'']?.state||'''').split('','').includes(''thu'') ? ''rgba(0,229,255,0.22)'' : ''rgba(255,255,255,0.05)''; ]]]'
+      - border: '[[[ return (states[''input_text.toyota_schedule_days'']?.state||'''').split('','').includes(''thu'') ? ''1px solid rgba(0,229,255,0.55)'' : ''1px solid rgba(255,255,255,0.08)''; ]]]'
+      name:
+      - font-size: 11px
+      - font-weight: '700'
+      - color: '[[[ return (states[''input_text.toyota_schedule_days'']?.state||'''').split('','').includes(''thu'') ? ''#00e5ff'' : ''rgba(255,255,255,0.45)''; ]]]'
+  - type: custom:button-card
+    name: F
+    show_icon: false
+    tap_action:
+      action: call-service
+      service: script.toyota_toggle_schedule_day
+      service_data:
+        day: fri
+    entity: input_text.toyota_schedule_days
+    styles:
+      card:
+      - border-radius: 999px
+      - padding: 8px 0
+      - margin: 0 1px
+      - background: '[[[ return (states[''input_text.toyota_schedule_days'']?.state||'''').split('','').includes(''fri'') ? ''rgba(0,229,255,0.22)'' : ''rgba(255,255,255,0.05)''; ]]]'
+      - border: '[[[ return (states[''input_text.toyota_schedule_days'']?.state||'''').split('','').includes(''fri'') ? ''1px solid rgba(0,229,255,0.55)'' : ''1px solid rgba(255,255,255,0.08)''; ]]]'
+      name:
+      - font-size: 11px
+      - font-weight: '700'
+      - color: '[[[ return (states[''input_text.toyota_schedule_days'']?.state||'''').split('','').includes(''fri'') ? ''#00e5ff'' : ''rgba(255,255,255,0.45)''; ]]]'
+  - type: custom:button-card
+    name: S
+    show_icon: false
+    tap_action:
+      action: call-service
+      service: script.toyota_toggle_schedule_day
+      service_data:
+        day: sat
+    entity: input_text.toyota_schedule_days
+    styles:
+      card:
+      - border-radius: 999px
+      - padding: 8px 0
+      - margin: 0 1px
+      - background: '[[[ return (states[''input_text.toyota_schedule_days'']?.state||'''').split('','').includes(''sat'') ? ''rgba(0,229,255,0.22)'' : ''rgba(255,255,255,0.05)''; ]]]'
+      - border: '[[[ return (states[''input_text.toyota_schedule_days'']?.state||'''').split('','').includes(''sat'') ? ''1px solid rgba(0,229,255,0.55)'' : ''1px solid rgba(255,255,255,0.08)''; ]]]'
+      name:
+      - font-size: 11px
+      - font-weight: '700'
+      - color: '[[[ return (states[''input_text.toyota_schedule_days'']?.state||'''').split('','').includes(''sat'') ? ''#00e5ff'' : ''rgba(255,255,255,0.45)''; ]]]'
+- type: horizontal-stack
+  cards:
+  - type: custom:button-card
+    name: ONE-TIME
+    icon: mdi:calendar-clock
+    show_state: false
+    show_label: true
+    label: '[[[ const s=states[''input_boolean.toyota_one_time_enabled'']?.state; return s===''on''?''On'':s===''off''?''Off'':(s||''''); ]]]'
+    tap_action:
+      action: toggle
+      entity: input_boolean.toyota_one_time_enabled
+    styles:
+      card:
+      - background: '[[[ return (()=>{ return states[''input_boolean.toyota_one_time_enabled'']?.state === ''on''; })() ? ''linear-gradient(160deg,rgba(0,229,255,0.18),rgba(0,229,255,0.08))'' : ''linear-gradient(160deg,rgba(26,26,32,0.92),rgba(10,10,15,0.97))''; ]]]'
+      - border: 1px solid rgba(255,255,255,0.07)
+      - border-top: '[[[ return (()=>{ return states[''input_boolean.toyota_one_time_enabled'']?.state === ''on''; })() ? ''1px solid rgba(0,229,255,0.42)'' : ''1px solid rgba(255,255,255,0.15)''; ]]]'
+      - border-radius: 14px
+      - padding: 10px 0 8px
+      - margin: 0 2px
+      - box-shadow: '[[[ return (()=>{ return states[''input_boolean.toyota_one_time_enabled'']?.state === ''on''; })() ? ''0 8px 28px rgba(0,0,0,0.65),0 0 22px rgba(0,229,255,0.12)'' : ''0 8px 28px rgba(0,0,0,0.65)''; ]]]'
+      icon:
+      - color: '#00e5ff'
+      - width: 22px
+      - filter: '[[[ return (()=>{ return states[''input_boolean.toyota_one_time_enabled'']?.state === ''on''; })() ? ''drop-shadow(0 0 5px rgba(0,229,255,0.7))'' : ''none''; ]]]'
+      name:
+      - color: '#00e5ff'
+      - font-size: 10px
+      - font-weight: '700'
+      - letter-spacing: 0.5px
+      label:
+      - color: rgba(0,229,255,0.55)
+      - font-size: 9px
+      - font-weight: '500'
+      - margin-top: 2px
+      - font-variant-numeric: tabular-nums
+    entity: input_boolean.toyota_one_time_enabled
+    hold_action:
+      action: more-info
+      entity: input_boolean.toyota_one_time_enabled
+  - type: custom:button-card
+    name: WHEN
+    icon: mdi:calendar-edit
+    show_state: false
+    show_label: true
+    label: '[[[ const s=states[''input_datetime.toyota_one_time_start'']?.state;if(!s||s===''unknown'')return ''Set'';return new Date(s.replace('' '',''T'')).toLocaleString([], {month:''short'',day:''numeric'',hour:''numeric'',minute:''2-digit''}); ]]]'
+    tap_action:
+      action: more-info
+      entity: input_datetime.toyota_one_time_start
+    styles:
+      card:
+      - background: '[[[ return (()=>{ return true; })() ? ''linear-gradient(160deg,rgba(0,229,255,0.18),rgba(0,229,255,0.08))'' : ''linear-gradient(160deg,rgba(26,26,32,0.92),rgba(10,10,15,0.97))''; ]]]'
+      - border: 1px solid rgba(255,255,255,0.07)
+      - border-top: '[[[ return (()=>{ return true; })() ? ''1px solid rgba(0,229,255,0.42)'' : ''1px solid rgba(255,255,255,0.15)''; ]]]'
+      - border-radius: 14px
+      - padding: 10px 0 8px
+      - margin: 0 2px
+      - box-shadow: '[[[ return (()=>{ return true; })() ? ''0 8px 28px rgba(0,0,0,0.65),0 0 22px rgba(0,229,255,0.12)'' : ''0 8px 28px rgba(0,0,0,0.65)''; ]]]'
+      icon:
+      - color: '#00e5ff'
+      - width: 22px
+      - filter: '[[[ return (()=>{ return true; })() ? ''drop-shadow(0 0 5px rgba(0,229,255,0.7))'' : ''none''; ]]]'
+      name:
+      - color: '#00e5ff'
+      - font-size: 10px
+      - font-weight: '700'
+      - letter-spacing: 0.5px
+      label:
+      - color: rgba(0,229,255,0.55)
+      - font-size: 9px
+      - font-weight: '500'
+      - margin-top: 2px
+      - font-variant-numeric: tabular-nums
+    entity: input_datetime.toyota_one_time_start
+    hold_action:
+      action: more-info
+      entity: input_datetime.toyota_one_time_start
+- type: horizontal-stack
+  cards:
+  - type: custom:button-card
+    name: WEATHER GATE
+    icon: mdi:thermometer-alert
+    show_state: false
+    show_label: true
+    label: '[[[ const s=states[''input_boolean.toyota_weather_gate'']?.state; return s===''on''?''On'':s===''off''?''Off'':(s||''''); ]]]'
+    tap_action:
+      action: toggle
+      entity: input_boolean.toyota_weather_gate
+    styles:
+      card:
+      - background: '[[[ return (()=>{ return states[''input_boolean.toyota_weather_gate'']?.state === ''on''; })() ? ''linear-gradient(160deg,rgba(0,229,255,0.18),rgba(0,229,255,0.08))'' : ''linear-gradient(160deg,rgba(26,26,32,0.92),rgba(10,10,15,0.97))''; ]]]'
+      - border: 1px solid rgba(255,255,255,0.07)
+      - border-top: '[[[ return (()=>{ return states[''input_boolean.toyota_weather_gate'']?.state === ''on''; })() ? ''1px solid rgba(0,229,255,0.42)'' : ''1px solid rgba(255,255,255,0.15)''; ]]]'
+      - border-radius: 14px
+      - padding: 10px 0 8px
+      - margin: 0 2px
+      - box-shadow: '[[[ return (()=>{ return states[''input_boolean.toyota_weather_gate'']?.state === ''on''; })() ? ''0 8px 28px rgba(0,0,0,0.65),0 0 22px rgba(0,229,255,0.12)'' : ''0 8px 28px rgba(0,0,0,0.65)''; ]]]'
+      icon:
+      - color: '#00e5ff'
+      - width: 22px
+      - filter: '[[[ return (()=>{ return states[''input_boolean.toyota_weather_gate'']?.state === ''on''; })() ? ''drop-shadow(0 0 5px rgba(0,229,255,0.7))'' : ''none''; ]]]'
+      name:
+      - color: '#00e5ff'
+      - font-size: 10px
+      - font-weight: '700'
+      - letter-spacing: 0.5px
+      label:
+      - color: rgba(0,229,255,0.55)
+      - font-size: 9px
+      - font-weight: '500'
+      - margin-top: 2px
+      - font-variant-numeric: tabular-nums
+    entity: input_boolean.toyota_weather_gate
+    hold_action:
+      action: more-info
+      entity: input_boolean.toyota_weather_gate
+  - type: custom:button-card
+    name: LIMITS
+    icon: mdi:tune-variant
+    show_state: false
+    show_label: true
+    label: '[[[ return ''Settings''; ]]]'
+    tap_action:
+      action: call-service
+      service: input_boolean.toggle
+      service_data:
+        entity_id: input_boolean.toyota_show_settings
+    styles:
+      card:
+      - background: '[[[ return (()=>{ return states[''input_boolean.toyota_show_settings'']?.state === ''on''; })() ? ''linear-gradient(160deg,rgba(144,202,249,0.18),rgba(144,202,249,0.08))'' : ''linear-gradient(160deg,rgba(26,26,32,0.92),rgba(10,10,15,0.97))''; ]]]'
+      - border: 1px solid rgba(255,255,255,0.07)
+      - border-top: '[[[ return (()=>{ return states[''input_boolean.toyota_show_settings'']?.state === ''on''; })() ? ''1px solid rgba(144,202,249,0.42)'' : ''1px solid rgba(255,255,255,0.15)''; ]]]'
+      - border-radius: 14px
+      - padding: 10px 0 8px
+      - margin: 0 2px
+      - box-shadow: '[[[ return (()=>{ return states[''input_boolean.toyota_show_settings'']?.state === ''on''; })() ? ''0 8px 28px rgba(0,0,0,0.65),0 0 22px rgba(144,202,249,0.12)'' : ''0 8px 28px rgba(0,0,0,0.65)''; ]]]'
+      icon:
+      - color: '#90caf9'
+      - width: 22px
+      - filter: '[[[ return (()=>{ return states[''input_boolean.toyota_show_settings'']?.state === ''on''; })() ? ''drop-shadow(0 0 5px rgba(144,202,249,0.7))'' : ''none''; ]]]'
+      name:
+      - color: '#90caf9'
+      - font-size: 10px
+      - font-weight: '700'
+      - letter-spacing: 0.5px
+      label:
+      - color: rgba(144,202,249,0.55)
+      - font-size: 9px
+      - font-weight: '500'
+      - margin-top: 2px
+      - font-variant-numeric: tabular-nums
+    entity: input_boolean.toyota_show_settings
+    hold_action:
+      action: more-info
+      entity: input_boolean.toyota_show_settings
+- type: conditional
+  conditions:
+  - condition: state
+    entity: input_boolean.toyota_show_settings
+    state: 'on'
+  card:
+    type: entities
+    title: Settings
+    show_header_toggle: false
+    entities:
+    - type: section
+      label: Oil change
+    - type: button
+      name: Log oil change now (uses current odometer)
+      icon: mdi:oil
+      action_name: LOG
+      tap_action:
+        action: call-service
+        service: script.toyota_log_oil_change
+        confirmation:
+          text: Record an oil change at today's odometer?
+    - entity: input_number.toyota_last_oil_change_odometer
+      name: Last oil change odometer
+    - entity: input_datetime.toyota_last_oil_change_date
+      name: Last oil change date
+    - entity: input_number.toyota_oil_change_interval
+      name: Interval (miles)
+    - entity: input_number.toyota_oil_change_months
+      name: Interval (months)
+    - type: section
+      label: Schedule weather gate
+    - entity: input_number.toyota_cold_below
+      name: Start if colder than
+    - entity: input_number.toyota_hot_above
+      name: Start if hotter than
+    - type: section
+      label: Lease tracker (leave start odometer at 0 to hide)
+    - entity: input_number.toyota_lease_start_odometer
+      name: Lease start odometer
+    - entity: input_datetime.toyota_lease_start_date
+      name: Lease start date
+    - entity: input_number.toyota_lease_miles_yr1
+      name: Year 1 miles
+    - entity: input_number.toyota_lease_miles_yr2
+      name: Year 2 miles
+    - entity: input_number.toyota_lease_miles_yr3
+      name: Year 3 miles
+    - type: section
+      label: ''
+    - type: button
+      name: Close settings
+      icon: mdi:close
+      action_name: CLOSE
+      tap_action:
+        action: call-service
+        service: input_boolean.turn_off
+        service_data:
+          entity_id: input_boolean.toyota_show_settings
+- type: map
+  entities:
+  - entity: device_tracker.YOUR_CAR_current_location
+    label_mode: name
+  aspect_ratio: 16x9
+  default_zoom: 15

@@ -1,0 +1,379 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Toyota Remote Kit — Home Assistant package
+#   • Recurring + one-time scheduled remote start (with optional weather gate)
+#   • Helper scripts used by the dashboard card (climate stepper, day chips)
+#   • Oil-change tracker ("next service" measured from your last oil change)
+#
+# Requires the Toyota (North America) integration fork: github.com/orienw/ha-toyota-na
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# BEFORE YOU LOAD THIS FILE, replace these placeholders (find & replace):
+#   YOUR_CAR        -> your vehicle's entity slug, e.g. 2025_camry_xse
+#                      (Settings > Devices > your car: look at any entity ID)
+#   YOUR_PHONE      -> your mobile_app notify target, e.g. pixel_8
+#   weather.forecast_home -> your weather entity, if it is named differently
+# See README.md for full instructions.
+#
+
+input_boolean:
+  toyota_schedule_enabled:
+    name: "My Toyota Schedule — Recurring Start"
+    icon: mdi:calendar-sync
+  toyota_one_time_enabled:
+    name: "My Toyota Schedule — One-Time Start"
+    icon: mdi:calendar-clock
+  toyota_weather_gate:
+    name: "My Toyota Schedule — Only In Cold/Hot Weather"
+    icon: mdi:thermometer-alert
+  toyota_show_settings:
+    name: "My Toyota Show Card Settings"
+    icon: mdi:cog
+
+input_datetime:
+  toyota_schedule_time:
+    name: "My Toyota Schedule — Start Time"
+    has_date: false
+    has_time: true
+    icon: mdi:clock-outline
+  toyota_one_time_start:
+    name: "My Toyota Schedule — One-Time Date & Time"
+    has_date: true
+    has_time: true
+    icon: mdi:calendar-clock
+  toyota_last_oil_change_date:
+    name: "My Toyota Last Oil Change Date"
+    has_date: true
+    has_time: false
+    icon: mdi:oil
+  toyota_lease_start_date:
+    name: "My Toyota Lease Start Date"
+    has_date: true
+    has_time: false
+    icon: mdi:calendar-start
+
+input_text:
+  # Comma-separated weekdays for the recurring schedule, e.g. "mon,tue,wed,thu,fri".
+  # The dashboard's day chips edit this for you.
+  toyota_schedule_days:
+    name: "My Toyota Schedule — Days"
+    max: 30
+    icon: mdi:calendar-week
+
+input_number:
+  toyota_cold_below:
+    name: "My Toyota Schedule — Start If Colder Than"
+    min: -20
+    max: 70
+    step: 1
+    unit_of_measurement: "°F"
+    mode: box
+    icon: mdi:snowflake-thermometer
+  toyota_hot_above:
+    name: "My Toyota Schedule — Start If Hotter Than"
+    min: 60
+    max: 120
+    step: 1
+    unit_of_measurement: "°F"
+    mode: box
+    icon: mdi:sun-thermometer
+  toyota_last_oil_change_odometer:
+    name: "My Toyota Last Oil Change Odometer"
+    min: 0
+    max: 999999
+    step: 1
+    unit_of_measurement: "mi"
+    mode: box
+    icon: mdi:oil
+  toyota_oil_change_interval:
+    name: "My Toyota Oil Change Interval (miles)"
+    min: 1000
+    max: 20000
+    step: 500
+    unit_of_measurement: "mi"
+    mode: box
+    icon: mdi:oil-level
+  toyota_oil_change_months:
+    name: "My Toyota Oil Change Interval (months)"
+    min: 1
+    max: 24
+    step: 1
+    unit_of_measurement: "mo"
+    mode: box
+    icon: mdi:calendar-refresh
+  toyota_lease_start_odometer:
+    name: "My Toyota Lease Start Odometer"
+    min: 0
+    max: 999999
+    step: 1
+    unit_of_measurement: "mi"
+    mode: box
+    icon: mdi:counter
+  toyota_lease_miles_yr1:
+    name: "My Toyota Lease — Year 1 Miles"
+    min: 1000
+    max: 30000
+    step: 500
+    unit_of_measurement: "mi"
+    mode: box
+    icon: mdi:counter
+  toyota_lease_miles_yr2:
+    name: "My Toyota Lease — Year 2 Miles"
+    min: 1000
+    max: 30000
+    step: 500
+    unit_of_measurement: "mi"
+    mode: box
+    icon: mdi:counter
+  toyota_lease_miles_yr3:
+    name: "My Toyota Lease — Year 3 Miles"
+    min: 1000
+    max: 30000
+    step: 500
+    unit_of_measurement: "mi"
+    mode: box
+    icon: mdi:counter
+
+timer:
+  toyota_engine:
+    name: "My Toyota Engine Timer"
+    duration: "00:10:00"
+    icon: mdi:engine
+    restore: true
+
+template:
+  - sensor:
+      # Miles left until the next oil change, measured from the odometer at your
+      # last oil change (set it with the "Log oil change" button on the card).
+      - name: "My Toyota Next Oil Change"
+        unique_id: toyota_next_oil_change
+        unit_of_measurement: "mi"
+        icon: mdi:oil
+        availability: >
+          {{ is_number(states('sensor.YOUR_CAR_odometer'))
+             and states('input_number.toyota_last_oil_change_odometer') | float(0) > 0 }}
+        state: >
+          {% set odo = states('sensor.YOUR_CAR_odometer') | float(0) %}
+          {% set last = states('input_number.toyota_last_oil_change_odometer') | float(0) %}
+          {% set iv = states('input_number.toyota_oil_change_interval') | float(10000) %}
+          {{ (last + iv - odo) | round(0) | int }}
+        attributes:
+          due_at_odometer: >
+            {{ (states('input_number.toyota_last_oil_change_odometer') | float(0)
+                + states('input_number.toyota_oil_change_interval') | float(10000)) | int }}
+          due_date: >
+            {% set d = states('input_datetime.toyota_last_oil_change_date') %}
+            {% set m = states('input_number.toyota_oil_change_months') | int(12) %}
+            {% if d not in ['unknown', 'unavailable', ''] %}
+              {% set dt = as_datetime(d) %}
+              {% set y = dt.year + ((dt.month - 1 + m) // 12) %}
+              {% set mo = (dt.month - 1 + m) % 12 + 1 %}
+              {{ '%04d-%02d-%02d' | format(y, mo, [dt.day, 28] | min) }}
+            {% endif %}
+
+      # 0–100 % of the oil-change interval used — by miles or by time,
+      # whichever is further along.
+      - name: "My Toyota Oil Life Used"
+        unique_id: toyota_oil_life_used
+        unit_of_measurement: "%"
+        icon: mdi:oil-level
+        availability: >
+          {{ is_number(states('sensor.YOUR_CAR_odometer'))
+             and states('input_number.toyota_last_oil_change_odometer') | float(0) > 0 }}
+        state: >
+          {% set odo = states('sensor.YOUR_CAR_odometer') | float(0) %}
+          {% set last = states('input_number.toyota_last_oil_change_odometer') | float(0) %}
+          {% set iv = states('input_number.toyota_oil_change_interval') | float(10000) %}
+          {% set by_miles = (odo - last) / iv * 100 if iv > 0 else 0 %}
+          {% set d = states('input_datetime.toyota_last_oil_change_date') %}
+          {% set m = states('input_number.toyota_oil_change_months') | float(12) %}
+          {% set by_time = ((now() - as_datetime(d) | as_local).days / (m * 30.44) * 100)
+                           if d not in ['unknown', 'unavailable', ''] and m > 0 else 0 %}
+          {{ [[by_miles, by_time] | max, 0] | max | min(100) | round(0) | int }}
+
+script:
+  toyota_remote_start:
+    alias: "My Toyota — Remote Start"
+    icon: mdi:engine
+    mode: single
+    sequence:
+      # Toyota can take ~60–90 s to confirm a command and occasionally reports an
+      # error even though the car started, so don't let that abort the script.
+      - action: button.press
+        target:
+          entity_id: button.YOUR_CAR_remote_start
+        continue_on_error: true
+      - action: timer.start
+        target:
+          entity_id: timer.toyota_engine
+        data:
+          # Toyota's standard remote-start runtime is 10 min; "Longer Climate
+          # Runtime" roughly doubles it. Adjust if your vehicle differs.
+          duration: >
+            {{ '00:20:00' if is_state('switch.YOUR_CAR_longer_climate_runtime', 'on') else '00:10:00' }}
+
+  toyota_remote_stop:
+    alias: "My Toyota — Remote Stop"
+    icon: mdi:engine-off
+    mode: single
+    sequence:
+      - action: button.press
+        target:
+          entity_id: button.YOUR_CAR_remote_stop
+        continue_on_error: true
+      - action: timer.cancel
+        target:
+          entity_id: timer.toyota_engine
+
+  toyota_toggle_schedule_day:
+    alias: "My Toyota — Toggle Schedule Day"
+    icon: mdi:calendar-week
+    mode: queued
+    fields:
+      day:
+        description: "Weekday to toggle (mon, tue, wed, thu, fri, sat, sun)"
+        required: true
+        selector:
+          select:
+            options: [mon, tue, wed, thu, fri, sat, sun]
+    sequence:
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.toyota_schedule_days
+        data:
+          value: >
+            {% set order = ['mon','tue','wed','thu','fri','sat','sun'] %}
+            {% set cur = states('input_text.toyota_schedule_days').split(',') | map('trim') | select('in', order) | list %}
+            {% set cur = cur | reject('eq', day) | list if day in cur else cur + [day] %}
+            {{ order | select('in', cur) | join(',') }}
+
+  toyota_climate_temp_step:
+    alias: "My Toyota — Climate Temperature Step"
+    icon: mdi:thermometer
+    mode: queued
+    fields:
+      step:
+        description: "Degrees to add (negative to lower)"
+        required: true
+        selector:
+          number:
+            min: -5
+            max: 5
+    sequence:
+      - action: number.set_value
+        target:
+          entity_id: number.YOUR_CAR_climate_temperature
+        data:
+          value: >
+            {% set e = 'number.YOUR_CAR_climate_temperature' %}
+            {% set lo = state_attr(e, 'min') | float(65) %}
+            {% set hi = state_attr(e, 'max') | float(85) %}
+            {{ [[states(e) | float(72) + step | float(0), lo] | max, hi] | min }}
+
+  toyota_log_oil_change:
+    alias: "My Toyota — Log Oil Change (now)"
+    icon: mdi:oil
+    mode: single
+    sequence:
+      - action: input_number.set_value
+        target:
+          entity_id: input_number.toyota_last_oil_change_odometer
+        data:
+          value: "{{ states('sensor.YOUR_CAR_odometer') | float(0) | round(0) }}"
+      - action: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.toyota_last_oil_change_date
+        data:
+          date: "{{ now().date() }}"
+
+automation:
+  - id: toyota_scheduled_remote_start
+    alias: "My Toyota | Scheduled Remote Start"
+    description: >
+      Remote-starts the vehicle (with its saved climate settings) on the recurring
+      schedule and/or the one-time date set on the dashboard card.
+    mode: single
+    triggers:
+      - trigger: time
+        at: input_datetime.toyota_schedule_time
+        id: recurring
+      - trigger: time
+        at: input_datetime.toyota_one_time_start
+        id: one_time
+    conditions:
+      - condition: or
+        conditions:
+          - condition: and
+            conditions:
+              - condition: trigger
+                id: recurring
+              - condition: state
+                entity_id: input_boolean.toyota_schedule_enabled
+                state: "on"
+              - condition: template
+                value_template: >
+                  {{ ['mon','tue','wed','thu','fri','sat','sun'][now().weekday()]
+                     in states('input_text.toyota_schedule_days').split(',') | map('trim') | list }}
+          - condition: and
+            conditions:
+              - condition: trigger
+                id: one_time
+              - condition: state
+                entity_id: input_boolean.toyota_one_time_enabled
+                state: "on"
+    actions:
+      # A one-time start disarms itself first so it can never repeat.
+      - if:
+          - condition: trigger
+            id: one_time
+        then:
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.toyota_one_time_enabled
+      - variables:
+          outside_temp: "{{ state_attr('weather.forecast_home', 'temperature') }}"
+      - if:
+          - condition: state
+            entity_id: binary_sensor.YOUR_CAR_remote_start
+            state: "on"
+        then:
+          - stop: "Engine already running"
+      - if:
+          - condition: state
+            entity_id: input_boolean.toyota_weather_gate
+            state: "on"
+          - condition: template
+            value_template: >
+              {{ is_number(outside_temp)
+                 and states('input_number.toyota_cold_below') | float(-99) < outside_temp | float
+                 and outside_temp | float < states('input_number.toyota_hot_above') | float(999) }}
+        then:
+          - action: notify.mobile_app_YOUR_PHONE
+            data:
+              title: "My Toyota — Scheduled start skipped"
+              message: >
+                It's {{ outside_temp }}° outside, which is between your
+                {{ states('input_number.toyota_cold_below') | int }}° / {{ states('input_number.toyota_hot_above') | int }}° limits.
+          - stop: "Weather gate"
+      - action: script.toyota_remote_start
+      - wait_for_trigger:
+          - trigger: state
+            entity_id: binary_sensor.YOUR_CAR_remote_start
+            to: "on"
+        timeout: "00:03:00"
+        continue_on_timeout: true
+      - if:
+          - condition: template
+            value_template: "{{ not wait.trigger }}"
+        then:
+          - action: notify.mobile_app_YOUR_PHONE
+            data:
+              title: "My Toyota — Scheduled start may have failed"
+              message: >
+                The car didn't report running within 3 minutes. Toyota limits
+                back-to-back remote starts, and a door, hood or hatch left open
+                also blocks remote start.
+        else:
+          - action: notify.mobile_app_YOUR_PHONE
+            data:
+              title: "My Toyota — Scheduled start"
+              message: "Your car is running{{ ' (' ~ outside_temp ~ '° outside)' if is_number(outside_temp) else '' }}."

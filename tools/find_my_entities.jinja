@@ -1,0 +1,14 @@
+{#- Paste into Developer Tools > Template. Change the lock entity below to yours
+    (Settings > Devices & services > Toyota > your car > the Lock entity). -#}
+{%- set lock = 'lock.YOUR_CAR' -%}
+{%- set dev = device_id(lock) -%}
+{%- if not dev -%}
+Lock entity not found - check the ID on the first line.
+{%- else -%}
+Device: {{ device_attr(dev, 'name') }}
+Suggested YOUR_CAR value: {{ lock.split('.')[1] }}
+
+Entities on this device:
+{% for e in device_entities(dev) | sort %}  {{ e }}
+{% endfor %}
+{%- endif -%}
